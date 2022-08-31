@@ -1,0 +1,181 @@
+{
+  explainVersion: '1',
+  stages: [
+    {
+      '$cursor': {
+        queryPlanner: {
+          namespace: 'imdb.titles',
+          indexFilterSet: false,
+          parsedQuery: {
+            '$and': [
+              { startYear: { '$eq': 2021 } },
+              { titleType: { '$eq': 'movie' } },
+              { genres: { '$regex': '.*Adventure.*Fantasy.*' } }
+            ]
+          },
+          queryHash: 'DE1C066F',
+          planCacheKey: 'DE1C066F',
+          maxIndexedOrSolutionsReached: false,
+          maxIndexedAndSolutionsReached: false,
+          maxScansToExplodeReached: false,
+          winningPlan: {
+            stage: 'PROJECTION_DEFAULT',
+            transformBy: {
+              genres: 1,
+              primaryTitle: 1,
+              'rating.averageRating': 1,
+              startYear: 1,
+              tconst: 1,
+              _id: 0
+            },
+            inputStage: {
+              stage: 'COLLSCAN',
+              filter: {
+                '$and': [
+                  { startYear: { '$eq': 2021 } },
+                  { titleType: { '$eq': 'movie' } },
+                  { genres: { '$regex': '.*Adventure.*Fantasy.*' } }
+                ]
+              },
+              direction: 'forward'
+            }
+          },
+          rejectedPlans: []
+        },
+        executionStats: {
+          executionSuccess: true,
+          nReturned: 56,
+          executionTimeMillis: 72420,
+          totalKeysExamined: 0,
+          totalDocsExamined: 8177444,
+          executionStages: {
+            stage: 'PROJECTION_DEFAULT',
+            nReturned: 56,
+            executionTimeMillisEstimate: 4331,
+            works: 8177446,
+            advanced: 56,
+            needTime: 8177389,
+            needYield: 0,
+            saveState: 8179,
+            restoreState: 8179,
+            isEOF: 1,
+            transformBy: {
+              genres: 1,
+              primaryTitle: 1,
+              'rating.averageRating': 1,
+              startYear: 1,
+              tconst: 1,
+              _id: 0
+            },
+            inputStage: {
+              stage: 'COLLSCAN',
+              filter: {
+                '$and': [
+                  { startYear: { '$eq': 2021 } },
+                  { titleType: { '$eq': 'movie' } },
+                  { genres: { '$regex': '.*Adventure.*Fantasy.*' } }
+                ]
+              },
+              nReturned: 56,
+              executionTimeMillisEstimate: 4258,
+              works: 8177446,
+              advanced: 56,
+              needTime: 8177389,
+              needYield: 0,
+              saveState: 8179,
+              restoreState: 8179,
+              isEOF: 1,
+              direction: 'forward',
+              docsExamined: 8177444
+            }
+          }
+        }
+      },
+      nReturned: Long("56"),
+      executionTimeMillisEstimate: Long("23345")
+    },
+    {
+      '$lookup': {
+        from: 'ratings',
+        as: 'rating',
+        localField: 'tconst',
+        foreignField: 'tconst'
+      },
+      totalDocsExamined: Long("65683016"),
+      totalKeysExamined: Long("0"),
+      collectionScans: Long("112"),
+      indexesUsed: [],
+      nReturned: Long("56"),
+      executionTimeMillisEstimate: Long("72406")
+    },
+    {
+      '$project': {
+        Title: '$primaryTitle',
+        Year: '$startYear',
+        Genre: '$genres',
+        Rating: '$rating.averageRating',
+        _id: false
+      },
+      nReturned: Long("56"),
+      executionTimeMillisEstimate: Long("72406")
+    },
+    {
+      '$sort': { sortKey: { Rating: -1 }, limit: Long("5") },
+      totalDataSizeSortedBytesEstimate: Long("5519"),
+      usedDisk: false,
+      spills: Long("0"),
+      nReturned: Long("5"),
+      executionTimeMillisEstimate: Long("72413")
+    }
+  ],
+  serverInfo: {
+    host: 'SLYRAK',
+    port: 27017,
+    version: '6.0.1',
+    gitVersion: '32f0f9c88dc44a2c8073a5bd47cf779d4bfdee6b'
+  },
+  serverParameters: {
+    internalQueryFacetBufferSizeBytes: 104857600,
+    internalQueryFacetMaxOutputDocSizeBytes: 104857600,
+    internalLookupStageIntermediateDocumentMaxSizeBytes: 104857600,
+    internalDocumentSourceGroupMaxMemoryBytes: 104857600,
+    internalQueryMaxBlockingSortMemoryUsageBytes: 104857600,
+    internalQueryProhibitBlockingMergeOnMongoS: 0,
+    internalQueryMaxAddToSetBytes: 104857600,
+    internalDocumentSourceSetWindowFieldsMaxMemoryBytes: 104857600
+  },
+  command: {
+    aggregate: 'titles',
+    pipeline: [
+      {
+        '$match': {
+          titleType: 'movie',
+          genres: { '$in': [ /.*Adventure.*Fantasy.*/ ] },
+          startYear: 2021
+        }
+      },
+      {
+        '$lookup': {
+          from: 'ratings',
+          localField: 'tconst',
+          foreignField: 'tconst',
+          as: 'rating'
+        }
+      },
+      {
+        '$project': {
+          _id: 0,
+          Title: '$primaryTitle',
+          Year: '$startYear',
+          Genre: '$genres',
+          Rating: '$rating.averageRating'
+        }
+      },
+      { '$sort': { Rating: -1 } },
+      { '$limit': 5 }
+    ],
+    cursor: {},
+    '$db': 'imdb'
+  },
+  ok: 1
+}
